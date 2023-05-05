@@ -1,4 +1,4 @@
-name: GitHub Organization Member Contribution Report Action
+name: GitHub Organization Member Contribution Report Generator
 description: 'An Action to generate a report that contains member contribution data for a set interval belonging to a GitHub organization.'
 
 inputs:
