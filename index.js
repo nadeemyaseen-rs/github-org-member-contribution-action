@@ -1,4 +1,4 @@
-const arraySort = require('array-sort')
+onst arraySort = require('array-sort')
 const core = require('@actions/core')
 const github = require('@actions/github')
 const stringify = require('csv-stringify/lib/sync')
