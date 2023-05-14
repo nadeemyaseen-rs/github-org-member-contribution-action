@@ -53,8 +53,16 @@ async function getMemberActivity(orgid, from, to, contribArray) {
             totalRepositoriesWithContributedCommits
             totalRepositoriesWithContributedPullRequests
             totalRepositoriesWithContributedPullRequestReviews
+            commitContributionsByRepository(maxRepositories:100) {
+            contributions (first: 100) {
+              totalCount
+            }
+            repository {
+              nameWithOwner
+            }
           }
         }
+      }
         pageInfo {
           hasNextPage
           endCursor
@@ -96,9 +104,10 @@ async function getMemberActivity(orgid, from, to, contribArray) {
         const repoCommitContrib = member.contributionsCollection.totalRepositoriesWithContributedCommits
         const repoPullRequestContrib = member.contributionsCollection.totalRepositoriesWithContributedPullRequests
         const repoPullRequestReviewContrib = member.contributionsCollection.totalRepositoriesWithContributedPullRequestReviews
+        const allBranchesCommits = member.contributionsCollection.commitContributionsByRepository
 
         // Push all member contributions from query to array
-        contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib})
+        contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib,allBranchesCommits})
         console.log(userName)
       }
     } while (hasNextPageMember)
@@ -170,6 +179,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
       repoCommitContrib: `Commit spread (${columnDate})`,
       repoPullRequestContrib: `PR spread (${columnDate})`,
       repoPullRequestReviewContrib: `PR review spread (${columnDate})`
+      allBranchesCommits: `All Repo All Branches (${columnDate})`   
     }
     const sortColumn = core.getInput('sort', {required: false}) || 'commitContrib'
     const sortArray = arraySort(contribArray, sortColumn, {reverse: true})
