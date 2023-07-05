@@ -13302,6 +13302,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+const fs = __nccwpck_require__(7147);
 const arraySort = __nccwpck_require__(3660)
 const core = __nccwpck_require__(2419)
 const github = __nccwpck_require__(5204)
@@ -13357,16 +13358,8 @@ async function getMemberActivity(orgid, from, to, contribArray) {
             totalRepositoriesWithContributedCommits
             totalRepositoriesWithContributedPullRequests
             totalRepositoriesWithContributedPullRequestReviews
-            commitContributionsByRepository(maxRepositories:100) {
-            contributions (first: 100) {
-              totalCount
-            }
-            repository {
-              nameWithOwner
-            }
           }
         }
-      }
         pageInfo {
           hasNextPage
           endCursor
@@ -13408,10 +13401,9 @@ async function getMemberActivity(orgid, from, to, contribArray) {
         const repoCommitContrib = member.contributionsCollection.totalRepositoriesWithContributedCommits
         const repoPullRequestContrib = member.contributionsCollection.totalRepositoriesWithContributedPullRequests
         const repoPullRequestReviewContrib = member.contributionsCollection.totalRepositoriesWithContributedPullRequestReviews
-        const allBranchesCommits = member.contributionsCollection.commitContributionsByRepository
 
         // Push all member contributions from query to array
-        contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib,allBranchesCommits})
+        contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib})
         console.log(userName)
       }
     } while (hasNextPageMember)
@@ -13482,8 +13474,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
       repoIssueContrib: `Issue spread (${columnDate})`,
       repoCommitContrib: `Commit spread (${columnDate})`,
       repoPullRequestContrib: `PR spread (${columnDate})`,
-      repoPullRequestReviewContrib: `PR review spread (${columnDate})`,
-      allBranchesCommits: `All Repo All Branches (${columnDate})`   
+      repoPullRequestReviewContrib: `PR review spread (${columnDate})`
     }
     const sortColumn = core.getInput('sort', {required: false}) || 'commitContrib'
     const sortArray = arraySort(contribArray, sortColumn, {reverse: true})
@@ -13499,14 +13490,14 @@ async function getMemberActivity(orgid, from, to, contribArray) {
     })
 
     // Prepare path/filename, repo/org context and commit name/email variables
-    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
-    //const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
-    const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
-    const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
-    const {owner, repo} = github.context.repo
+    //const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`    
+    //const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
+    //const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
+    //const {owner, repo} = github.context.repo
 
     // Push csv to repo
-    const opts = {
+    /*const opts = {
       owner,
       repo,
       path: reportPath,
@@ -13516,16 +13507,17 @@ async function getMemberActivity(orgid, from, to, contribArray) {
         name: committerName,
         email: committerEmail
       }
-    }
+    }*/
 
-      //fs.writeFileSync(reportPath, csv);
+    fs.writeFileSync(reportPath, csv);    
     console.log(`Pushing final CSV report to repository path: ${reportPath}`)
 
-    await octokit.rest.repos.createOrUpdateFileContents(opts)
+    //await octokit.rest.repos.createOrUpdateFileContents(opts)
   } catch (error) {
     core.setFailed(error.message)
   }
 })()
+
 
 })();
 
