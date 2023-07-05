@@ -10,8 +10,6 @@ const MyOctokit = GitHub.plugin(throttling, retry)
 const eventPayload = require(process.env.GITHUB_EVENT_PATH)
 const org = core.getInput('org', {required: false}) || eventPayload.organization.login
 const token = core.getInput('token', {required: true})
-const fs = require('fs');
-const path = require('path');
 
 // API throttling
 const octokit = new MyOctokit({
@@ -180,7 +178,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
       repoIssueContrib: `Issue spread (${columnDate})`,
       repoCommitContrib: `Commit spread (${columnDate})`,
       repoPullRequestContrib: `PR spread (${columnDate})`,
-      repoPullRequestReviewContrib: `PR review spread (${columnDate})`
+      repoPullRequestReviewContrib: `PR review spread (${columnDate})`,
       allBranchesCommits: `All Repo All Branches (${columnDate})`   
     }
     const sortColumn = core.getInput('sort', {required: false}) || 'commitContrib'
@@ -197,14 +195,14 @@ async function getMemberActivity(orgid, from, to, contribArray) {
     })
 
     // Prepare path/filename, repo/org context and commit name/email variables
-    //const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
-    const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
-    //const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
-    //const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
-    //const {owner, repo} = github.context.repo
+    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    //const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
+    const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
+    const {owner, repo} = github.context.repo
 
     // Push csv to repo
-    /*const opts = {
+    const opts = {
       owner,
       repo,
       path: reportPath,
@@ -214,12 +212,12 @@ async function getMemberActivity(orgid, from, to, contribArray) {
         name: committerName,
         email: committerEmail
       }
-    }*/
+    }
 
-      fs.writeFileSync(reportPath, csv);
+      //fs.writeFileSync(reportPath, csv);
     console.log(`Pushing final CSV report to repository path: ${reportPath}`)
 
-    //await octokit.rest.repos.createOrUpdateFileContents(opts)
+    await octokit.rest.repos.createOrUpdateFileContents(opts)
   } catch (error) {
     core.setFailed(error.message)
   }
