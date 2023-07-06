@@ -13397,14 +13397,12 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
 //////////////////////// added by nadeem  ////////////////////////////////////////////
         if (activeContrib) {
           try {
-            console.log(userName)
             // Find user id for member
             const idquery = `query ($username: String!) {
               user(login: $username) {
                 id
               }
             }`
-           // const variables = { username: 'tenace' }
             getUserIdResult = await octokit.graphql({
               query: idquery,      // Use 'query' instead of 'idquery'
               username: userName   // Pass the variables as 'variables' property
@@ -13434,7 +13432,6 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
-  console.log(userIDbArray)
 }
 
 ;(async () => {
@@ -13488,6 +13485,8 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
     const userIDbArray = []
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
     await getMemberActivity(orgid, from, to, contribArray,userIDbArray)
+
+    console.log(userIDbArray) // added by nadeem
 
     // Set sorting settings and add header to array
     const columns = {
