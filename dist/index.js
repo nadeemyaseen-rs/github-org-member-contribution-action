@@ -13404,10 +13404,10 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
                 id
               }
             }`
-            const variables = { username: 'tenace' }
+           // const variables = { username: 'tenace' }
             getUserIdResult = await octokit.graphql({
-              query: idquery, // Use 'query' instead of 'idquery'
-              variables: variables, // Pass the variables as 'variables' property
+              query: idquery,      // Use 'query' instead of 'idquery'
+              username: 'tenace'   // Pass the variables as 'variables' property
             })
           } catch (error) {
             core.setFailed(error.message)
