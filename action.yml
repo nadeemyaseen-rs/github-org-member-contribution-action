@@ -32,9 +32,6 @@ inputs:
   todate:
     description: 'The date to which to stop collecting data'
     required: false
-  pathOfImpRepFile:
-    description: 'The path of file containing important repos. One repo pr line'
-    required: false
 
 runs:
   using: 'node16'

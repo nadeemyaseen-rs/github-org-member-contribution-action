@@ -13355,6 +13355,52 @@ const octokit = new MyOctokit({
 })
 
 ///////////////// added by nadeem ///////////////////////////
+// Query all commits of given user in all Repos of org from given time
+async function getAllBranchComits(uid,from,allReposArray) {
+  const query = `query ($uid: ID, $from: GitTimestamp, $repo: String!, $org: String!){
+    repository(name: $repo, owner: $org) {
+      refs(refPrefix: "refs/heads/", first: 100, after: null) {
+        edges {
+          node {
+           name
+            target {
+          ... on Commit {
+            history(author: { id: $uid},since: $from) {
+              edges {
+                node {
+                  oid
+                  author {
+                    name
+                    email
+                    date
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+    }
+  }`
+  try {
+
+    for (const r of allReposArray) {
+      getComitResult = await octokit.graphql({
+        query,
+        uid,
+        from,
+        repo : r,
+        org
+      })
+     console.log(getComitResult)
+    }
+  } catch (error) {
+    core.setFailed(error.message)
+  }
+}
+
 // Query all Repos of org
 async function getAllRepos(org,allReposArray) {
   let paginationMember = null
@@ -13401,32 +13447,12 @@ async function getAllRepos(org,allReposArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
-
-  // Create a readable stream from the file
-  const fileStream = fs.createReadStream(repofilepath);
-
-  // Create a readline interface
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity // Recognize all types of line breaks
-  })
-  // Event listener for reading lines
-  rl.on('line', (line) => {
-    console.log(line); // Print each line
-  });
-
-  // Event listener for when reading is complete
-  rl.on('close', () => {
-    console.log('File reading completed.');
-  });
-
-
 }
 
 /////////////////////////////////////////////////////////////
 
 // Query all org member contributions
-async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
+async function getMemberActivity(orgid, from, to, allReposArray,contribArray,userIDbArray) {
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {
@@ -13496,6 +13522,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
             core.setFailed(error.message)
           }
           const id = getUserIdResult.user.id
+          await getAllBranchComits(id,from,allReposArray)
           userIDbArray.push({userName,id})
         }
 //////////////////////////////////////////////////////////////////////////
@@ -13569,12 +13596,12 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
     const userIDbArray = []
     const allReposArray = []
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
-    await getMemberActivity(orgid, from, to, contribArray,userIDbArray)
-
-    //////////////////////////////// added by nadeem //////////////////////////////////
-    console.log(userIDbArray) 
+    
+    /////////////////// added by nadeem /////////////////////////////////
     await getAllRepos(org,allReposArray)
-    ///////////////////////////// ////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+
+    await getMemberActivity(orgid, from, to, allReposArray,contribArray,userIDbArray)
 
     // Set sorting settings and add header to array
     const columns = {
