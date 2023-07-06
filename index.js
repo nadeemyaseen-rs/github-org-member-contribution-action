@@ -109,7 +109,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
             core.setFailed(error.message)
           }
           console.log(getUserIdResult)
-          const id = user.id
+          const id = getUserIdResult.user.id
           userIDbArray.push({userName,id})
         }
 //////////////////////////////////////////////////////////////////////////
