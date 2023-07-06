@@ -36,6 +36,57 @@ const octokit = new MyOctokit({
   }
 })
 
+///////////////// added by nadeem ///////////////////////////
+// Query all org member contributions
+async function getAllRepos(org,allReposArray) {
+  let paginationMember = null
+  const query = `query ($org: String!, $after: String) {
+    organization(login: $org) {
+      repositories(first: 100, after: $after) {
+        nodes {
+          name
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }`
+  try {
+    let hasNextPageMember = false
+    let getRepoResult = null
+
+    do {
+      getRepoResult = await octokit.graphql({
+        query,
+        org,
+        after: paginationMember
+      })
+
+      const RepoObj = getRepoResult.organization.repositories.nodes
+      hasNextPageMember = getRepoResult.organization.repositories.pageInfo.hasNextPage
+
+      for (const repo of RepoObj) {
+        if (hasNextPageMember) {
+          paginationMember = getRepoResult.organization.repositories.pageInfo.endCursor
+        } else {
+          paginationMember = null
+        }
+
+        const repoName = repo.name
+        // Push all repo from query to array
+        allReposArray.push({repoName})
+        console.log(repoName)
+      }
+    } while (hasNextPageMember)
+  } catch (error) {
+    core.setFailed(error.message)
+  }
+}
+
+/////////////////////////////////////////////////////////////
+
 // Query all org member contributions
 async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
   let paginationMember = null
@@ -106,7 +157,6 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
           } catch (error) {
             core.setFailed(error.message)
           }
-          console.log(getUserIdResult)
           const id = getUserIdResult.user.id
           userIDbArray.push({userName,id})
         }
@@ -179,11 +229,15 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
     // Take time, orgid parameters and init array to get all member contributions
     const contribArray = []
     const userIDbArray = []
+    const allReposArray = []
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
     await getMemberActivity(orgid, from, to, contribArray,userIDbArray)
 
-    console.log(userIDbArray) // added by nadeem
-
+    //////////////////////////////// added by nadeem //////////////////////////////////
+    console.log(userIDbArray) 
+    await getAllRepos(org,allReposArray)
+    ///////////////////////////// ////////////////////////////////////////////////
+    
     // Set sorting settings and add header to array
     const columns = {
       userName: 'Member',
