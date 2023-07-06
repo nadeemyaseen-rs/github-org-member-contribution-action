@@ -103,13 +103,13 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
            // const variables = { username: 'tenace' }
             getUserIdResult = await octokit.graphql({
               query: idquery,      // Use 'query' instead of 'idquery'
-              username: 'tenace'   // Pass the variables as 'variables' property
+              username: userName   // Pass the variables as 'variables' property
             })
           } catch (error) {
             core.setFailed(error.message)
           }
           console.log(getUserIdResult)
-          const id = getUserIdResult.data.user.id
+          const id = user.id
           userIDbArray.push({userName,id})
         }
 //////////////////////////////////////////////////////////////////////////
