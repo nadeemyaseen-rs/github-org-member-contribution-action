@@ -13441,7 +13441,7 @@ async function getAllRepos(org,allReposArray) {
 
         const repoName = repo.name
         // Push all repo from query to array
-        allReposArray.push({repoName})
+        allReposArray.push(repoName)
         console.log(repoName)
       }
     } while (hasNextPageMember)
