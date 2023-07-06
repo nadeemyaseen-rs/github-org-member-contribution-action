@@ -107,6 +107,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
           } catch (error) {
             core.setFailed(error.message)
           }
+          console.log(getUserIdResult)
           const id = getUserIdResult.data.user.id
           userIDbArray.push({userName,id})
         }
@@ -128,7 +129,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
-  console.log(UserIDArray)
+  console.log(userIDbArray)
 }
 
 ;(async () => {
