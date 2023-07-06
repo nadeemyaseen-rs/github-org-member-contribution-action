@@ -75,6 +75,7 @@ async function getAllBranchComits(uid,from,allReposArray) {
   try {
 
     for (const r of allReposArray) {
+      console.log(r)
       getComitResult = await octokit.graphql({
         query,
         uid,
