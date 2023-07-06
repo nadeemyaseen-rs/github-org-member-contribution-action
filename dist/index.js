@@ -13370,7 +13370,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
   try {
     let hasNextPageMember = false
     let getMemberResult = null
-
+    const UserIDArray = []
     do {
       getMemberResult = await octokit.graphql({
         query,
@@ -13393,6 +13393,26 @@ async function getMemberActivity(orgid, from, to, contribArray) {
 
         const userName = member.login
         const activeContrib = member.contributionsCollection.hasAnyContributions
+/////////////////////////////////////////////////////////////////////////////
+        if (activeContrib) {
+          try {
+            // Find user id for organization
+            const query = `query ($username: String!) {
+              user(login: $username) {
+                id
+              }
+            }`
+            getUserIdResult = await octokit.graphql({
+              query,
+              userName
+            })
+          }catch (error) {
+            core.setFailed(error.message)
+          }
+          const id = getUserIdResult.data.user.id
+          UserIDArray.push({userName,id})
+        }
+//////////////////////////////////////////////////////////////////////////
         const commitContrib = member.contributionsCollection.totalCommitContributions
         const issueContrib = member.contributionsCollection.totalIssueContributions
         const prContrib = member.contributionsCollection.totalPullRequestContributions
@@ -13410,6 +13430,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
+  console.log(UserIDArray)
 }
 
 ;(async () => {
