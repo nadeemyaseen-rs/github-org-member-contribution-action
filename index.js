@@ -1,4 +1,3 @@
-const fs = require('fs');
 const arraySort = require('array-sort')
 const core = require('@actions/core')
 const github = require('@actions/github')
@@ -11,6 +10,13 @@ const MyOctokit = GitHub.plugin(throttling, retry)
 const eventPayload = require(process.env.GITHUB_EVENT_PATH)
 const org = core.getInput('org', {required: false}) || eventPayload.organization.login
 const token = core.getInput('token', {required: true})
+
+///////////////// added by nadeem ///////////////////
+const fs = require('fs');
+const readline = require('readline');
+const repofilepath = core.getInput('pathOfImpRepFile', {required: false})
+/////////////////////////////////////////////////////
+
 
 // API throttling
 const octokit = new MyOctokit({
@@ -37,7 +43,7 @@ const octokit = new MyOctokit({
 })
 
 ///////////////// added by nadeem ///////////////////////////
-// Query all org member contributions
+// Query all Repos of org
 async function getAllRepos(org,allReposArray) {
   let paginationMember = null
   const query = `query ($org: String!, $after: String) {
@@ -83,6 +89,26 @@ async function getAllRepos(org,allReposArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
+
+  // Create a readable stream from the file
+  const fileStream = fs.createReadStream(repofilepath);
+
+  // Create a readline interface
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity // Recognize all types of line breaks
+  })
+  // Event listener for reading lines
+  rl.on('line', (line) => {
+    console.log(line); // Print each line
+  });
+
+  // Event listener for when reading is complete
+  rl.on('close', () => {
+    console.log('File reading completed.');
+  });
+
+
 }
 
 /////////////////////////////////////////////////////////////
@@ -237,7 +263,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
     console.log(userIDbArray) 
     await getAllRepos(org,allReposArray)
     ///////////////////////////// ////////////////////////////////////////////////
-    
+
     // Set sorting settings and add header to array
     const columns = {
       userName: 'Member',

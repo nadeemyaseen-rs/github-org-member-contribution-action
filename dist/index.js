@@ -13205,6 +13205,14 @@ module.exports = require("punycode");
 
 /***/ }),
 
+/***/ 4521:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("readline");
+
+/***/ }),
+
 /***/ 2781:
 /***/ ((module) => {
 
@@ -13302,7 +13310,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-const fs = __nccwpck_require__(7147);
 const arraySort = __nccwpck_require__(3660)
 const core = __nccwpck_require__(2419)
 const github = __nccwpck_require__(5204)
@@ -13315,6 +13322,13 @@ const MyOctokit = GitHub.plugin(throttling, retry)
 const eventPayload = require(process.env.GITHUB_EVENT_PATH)
 const org = core.getInput('org', {required: false}) || eventPayload.organization.login
 const token = core.getInput('token', {required: true})
+
+///////////////// added by nadeem ///////////////////
+const fs = __nccwpck_require__(7147);
+const readline = __nccwpck_require__(4521);
+const repofilepath = core.getInput('pathOfImpRepFile', {required: false})
+/////////////////////////////////////////////////////
+
 
 // API throttling
 const octokit = new MyOctokit({
@@ -13341,7 +13355,7 @@ const octokit = new MyOctokit({
 })
 
 ///////////////// added by nadeem ///////////////////////////
-// Query all org member contributions
+// Query all Repos of org
 async function getAllRepos(org,allReposArray) {
   let paginationMember = null
   const query = `query ($org: String!, $after: String) {
@@ -13387,6 +13401,26 @@ async function getAllRepos(org,allReposArray) {
   } catch (error) {
     core.setFailed(error.message)
   }
+
+  // Create a readable stream from the file
+  const fileStream = fs.createReadStream(repofilepath);
+
+  // Create a readline interface
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity // Recognize all types of line breaks
+  })
+  // Event listener for reading lines
+  rl.on('line', (line) => {
+    console.log(line); // Print each line
+  });
+
+  // Event listener for when reading is complete
+  rl.on('close', () => {
+    console.log('File reading completed.');
+  });
+
+
 }
 
 /////////////////////////////////////////////////////////////
@@ -13541,7 +13575,7 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
     console.log(userIDbArray) 
     await getAllRepos(org,allReposArray)
     ///////////////////////////// ////////////////////////////////////////////////
-    
+
     // Set sorting settings and add header to array
     const columns = {
       userName: 'Member',
