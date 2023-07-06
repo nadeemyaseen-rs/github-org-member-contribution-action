@@ -13404,9 +13404,10 @@ async function getMemberActivity(orgid, from, to, contribArray,userIDbArray) {
                 id
               }
             }`
+            const uname = 'tenace'
             getUserIdResult = await octokit.graphql({
               idquery,
-              userName
+              uname
             })
           } catch (error) {
             core.setFailed(error.message)
