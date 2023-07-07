@@ -13356,7 +13356,6 @@ const octokit = new MyOctokit({
 ///////////////// added by nadeem ///////////////////////////
 // Query all commits of given user in all Repos of org from given time
 async function getAllBranchComits(uid,from,uniqueOids) {
-  uniqueOids = uniqueOids
   let paginationMember = null
   const query = `query ($org: String!, $uid: ID, $from: GitTimestamp, $after: String) {
     organization(login: $org) {
@@ -13437,7 +13436,7 @@ async function getAllBranchComits(uid,from,uniqueOids) {
 /////////////////////////////////////////////////////////////
 
 // Query all org member contributions
-async function getMemberActivity(orgid, from, to,contribArray) {
+async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {
@@ -13506,11 +13505,12 @@ async function getMemberActivity(orgid, from, to,contribArray) {
           } catch (error) {
             core.setFailed(error.message)
           }
-          const uniqueOids = []  /// temperory 
+          
           const id = getUserIdResult.user.id
           await getAllBranchComits(id,from,uniqueOids)
         }
         const commitContrib = uniqueOids.length
+        uniqueOids = []
 //////////////////////////////////////////////////////////////////////////
         //const commitContrib = member.contributionsCollection.totalCommitContributions
         const issueContrib = member.contributionsCollection.totalIssueContributions
@@ -13579,8 +13579,9 @@ async function getMemberActivity(orgid, from, to,contribArray) {
 
     // Take time, orgid parameters and init array to get all member contributions
     const contribArray = []
+    const uniqueOids = [] 
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
-    await getMemberActivity(orgid, from, to,contribArray)
+    await getMemberActivity(orgid, from, to,contribArray,uniqueOids)
 
     // Set sorting settings and add header to array
     const columns = {
