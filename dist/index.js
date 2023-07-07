@@ -13355,7 +13355,7 @@ const octokit = new MyOctokit({
 
 ///////////////// added by nadeem ///////////////////////////
 // Query all commits of given user in all Repos of org from given time
-async function getAllBranchComits(uid,from,uniqueOids) {
+async function getAllBranchComits(uid,from,uniqueOids,reposname) {
   let paginationMember = null
   const query = `query ($org: String!, $uid: ID, $from: GitTimestamp, $after: String) {
     organization(login: $org) {
@@ -13416,6 +13416,7 @@ async function getAllBranchComits(uid,from,uniqueOids) {
         repo.refs.edges.forEach((edge) => {
           if (edge.node.target.history.edges.length > 0) {
             edge.node.target.history.edges.forEach((historyEdge) => {
+              reposname.push(repo)
               const oid = historyEdge.node.oid
               oidSet.add(oid)
             })
@@ -13429,7 +13430,9 @@ async function getAllBranchComits(uid,from,uniqueOids) {
   } catch (error) {
     core.setFailed(error.message)
   }
+  console.log(reposname)
   console.log(uniqueOids);
+
 }
 
 /////////////////////////////////////////////////////////////
@@ -13521,6 +13524,7 @@ async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
         // Push all member contributions from query to array
         contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib})
         console.log(userName)
+        break
       }
     } while (hasNextPageMember)
   } catch (error) {
@@ -13578,12 +13582,13 @@ async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
     const contribArray = []
     const userIDbArray = [] // added by nadeem
     const uniqueOids = []  /// temperory 
+    const reposname = [] /// temperory
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
     await getMemberActivity(orgid, from, to,contribArray,userIDbArray)
 
         
     /////////////////// added by nadeem /////////////////////////////////
-    await getAllBranchComits("MDQ6VXNlcjg2MzQ0MjY0",from,uniqueOids)
+    await getAllBranchComits("MDQ6VXNlcjg2MzQ0MjY0",from,uniqueOids,reposname)
     /////////////////////////////////////////////////////////////////////
 
     // Set sorting settings and add header to array
