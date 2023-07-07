@@ -13326,7 +13326,6 @@ const token = core.getInput('token', {required: true})
 ///////////////// added by nadeem ///////////////////
 const fs = __nccwpck_require__(7147);
 const readline = __nccwpck_require__(4521);
-const repofilepath = core.getInput('pathOfImpRepFile', {required: false})
 /////////////////////////////////////////////////////
 
 
@@ -13356,60 +13355,31 @@ const octokit = new MyOctokit({
 
 ///////////////// added by nadeem ///////////////////////////
 // Query all commits of given user in all Repos of org from given time
-async function getAllBranchComits(uid,from,allReposArray) {
-  const query = `query ($uid: ID, $from: GitTimestamp, $repo: String!, $org: String!){
-    repository(name: $repo, owner: $org) {
-      refs(refPrefix: "refs/heads/", first: 100, after: null) {
-        edges {
-          node {
-           name
-            target {
-          ... on Commit {
-            history(author: { id: $uid},since: $from) {
-              edges {
-                node {
-                  oid
-                  author {
-                    name
-                    email
-                    date
+async function getAllBranchComits(uid,from,uniqueOids) {
+  let paginationMember = null
+  const query = `query ($org: String!, $uid: ID, $from: GitTimestamp, $after: String) {
+    organization(login: $org) {
+      repositories(first: 30, after: $after) {
+        nodes {
+          name
+          refs(refPrefix: "refs/heads/", last: 100) {
+            edges {
+              node {
+                name
+                target {
+                  ... on Commit {
+                    history(author: { id: $uid }, since: $from) {
+                      edges {
+                        node {
+                          oid
+                        }
+                      }
+                    }
                   }
                 }
               }
             }
           }
-        }
-      }
-    }
-  }
-    }
-  }`
-  try {
-
-    for (const r of allReposArray) {
-      console.log(r)
-      getComitResult = await octokit.graphql({
-        query,
-        uid,
-        from,
-        repo : r,
-        org
-      })
-     console.log(getComitResult)
-    }
-  } catch (error) {
-    core.setFailed(error.message)
-  }
-}
-
-// Query all Repos of org
-async function getAllRepos(org,allReposArray) {
-  let paginationMember = null
-  const query = `query ($org: String!, $after: String) {
-    organization(login: $org) {
-      repositories(first: 100, after: $after) {
-        nodes {
-          name
         }
         pageInfo {
           hasNextPage
@@ -13418,42 +13388,54 @@ async function getAllRepos(org,allReposArray) {
       }
     }
   }`
+
   try {
     let hasNextPageMember = false
-    let getRepoResult = null
+    let getComitResult = null
 
     do {
-      getRepoResult = await octokit.graphql({
+      getComitResult = await octokit.graphql({
         query,
         org,
+        uid: uid,
+        from,
         after: paginationMember
       })
 
-      const RepoObj = getRepoResult.organization.repositories.nodes
-      hasNextPageMember = getRepoResult.organization.repositories.pageInfo.hasNextPage
-
-      for (const repo of RepoObj) {
-        if (hasNextPageMember) {
-          paginationMember = getRepoResult.organization.repositories.pageInfo.endCursor
-        } else {
-          paginationMember = null
-        }
-
-        const repoName = repo.name
-        // Push all repo from query to array
-        allReposArray.push(repoName)
-        console.log(repoName)
+      //const ComitObj = getComitResult.organization.repositories.nodes
+      hasNextPageMember = getComitResult.organization.repositories.pageInfo.hasNextPage
+      if (hasNextPageMember) {
+        paginationMember = getComitResult.organization.repositories.pageInfo.endCursor
+      } else {
+        paginationMember = null
       }
+
+      const oidSet = new Set();
+
+      getComitResult.organization.repositories.nodes.forEach((repo) => {
+        repo.refs.edges.forEach((edge) => {
+          if (edge.node.target.history.edges.length > 0) {
+            edge.node.target.history.edges.forEach((historyEdge) => {
+              const oid = historyEdge.node.oid
+              oidSet.add(oid)
+            })
+          }
+        })
+      })
+
+      uniqueOids.push(...Array.from(oidSet));
+
     } while (hasNextPageMember)
   } catch (error) {
     core.setFailed(error.message)
   }
+  console.log(uniqueOids);
 }
 
 /////////////////////////////////////////////////////////////
 
 // Query all org member contributions
-async function getMemberActivity(orgid, from, to, allReposArray,contribArray,userIDbArray) {
+async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {
@@ -13523,7 +13505,7 @@ async function getMemberActivity(orgid, from, to, allReposArray,contribArray,use
             core.setFailed(error.message)
           }
           const id = getUserIdResult.user.id
-          await getAllBranchComits(id,from,allReposArray)
+          //await getAllBranchComits(id,from)
           userIDbArray.push({userName,id})
         }
 //////////////////////////////////////////////////////////////////////////
@@ -13594,15 +13576,15 @@ async function getMemberActivity(orgid, from, to, allReposArray,contribArray,use
 
     // Take time, orgid parameters and init array to get all member contributions
     const contribArray = []
-    const userIDbArray = []
-    const allReposArray = []
+    const userIDbArray = [] // added by nadeem
+    const uniqueOids = []  /// temperory 
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
-    
-    /////////////////// added by nadeem /////////////////////////////////
-    await getAllRepos(org,allReposArray)
-    /////////////////////////////////////////////////////////////////////
+    await getMemberActivity(orgid, from, to,contribArray,userIDbArray)
 
-    await getMemberActivity(orgid, from, to, allReposArray,contribArray,userIDbArray)
+        
+    /////////////////// added by nadeem /////////////////////////////////
+    await getAllBranchComits("MDQ6VXNlcjg2MzQ0MjY0",from,uniqueOids)
+    /////////////////////////////////////////////////////////////////////
 
     // Set sorting settings and add header to array
     const columns = {
