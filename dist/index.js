@@ -13356,6 +13356,7 @@ const octokit = new MyOctokit({
 ///////////////// added by nadeem ///////////////////////////
 // Query all commits of given user in all Repos of org from given time
 async function getAllBranchComits(uid,from,uniqueOids) {
+  uniqueOids = uniqueOids
   let paginationMember = null
   const query = `query ($org: String!, $uid: ID, $from: GitTimestamp, $after: String) {
     organization(login: $org) {
@@ -13499,8 +13500,8 @@ async function getMemberActivity(orgid, from, to,contribArray) {
               }
             }`
             getUserIdResult = await octokit.graphql({
-              query: idquery,      // Use 'query' instead of 'idquery'
-              username: userName   // Pass the variables as 'variables' property
+              query: idquery,
+              username: userName
             })
           } catch (error) {
             core.setFailed(error.message)
