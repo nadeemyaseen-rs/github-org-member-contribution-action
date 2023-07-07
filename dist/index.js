@@ -13355,7 +13355,7 @@ const octokit = new MyOctokit({
 
 ///////////////// added by nadeem ///////////////////////////
 // Query all commits of given user in all Repos of org from given time
-async function getAllBranchComits(uid,from,uniqueOids,reposname) {
+async function getAllBranchComits(uid,from,uniqueOids) {
   let paginationMember = null
   const query = `query ($org: String!, $uid: ID, $from: GitTimestamp, $after: String) {
     organization(login: $org) {
@@ -13416,7 +13416,6 @@ async function getAllBranchComits(uid,from,uniqueOids,reposname) {
         repo.refs.edges.forEach((edge) => {
           if (edge.node.target.history.edges.length > 0) {
             edge.node.target.history.edges.forEach((historyEdge) => {
-              reposname.push(repo)
               const oid = historyEdge.node.oid
               oidSet.add(oid)
             })
@@ -13430,15 +13429,14 @@ async function getAllBranchComits(uid,from,uniqueOids,reposname) {
   } catch (error) {
     core.setFailed(error.message)
   }
-  console.log(reposname)
-  console.log(uniqueOids);
+  //console.log(uniqueOids);
 
 }
 
 /////////////////////////////////////////////////////////////
 
 // Query all org member contributions
-async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
+async function getMemberActivity(orgid, from, to,contribArray) {
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {
@@ -13507,12 +13505,13 @@ async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
           } catch (error) {
             core.setFailed(error.message)
           }
+          const uniqueOids = []  /// temperory 
           const id = getUserIdResult.user.id
-          //await getAllBranchComits(id,from)
-          userIDbArray.push({userName,id})
+          await getAllBranchComits(id,from,uniqueOids)
         }
+        const commitContrib = uniqueOids.length
 //////////////////////////////////////////////////////////////////////////
-        const commitContrib = member.contributionsCollection.totalCommitContributions
+        //const commitContrib = member.contributionsCollection.totalCommitContributions
         const issueContrib = member.contributionsCollection.totalIssueContributions
         const prContrib = member.contributionsCollection.totalPullRequestContributions
         const prreviewContrib = member.contributionsCollection.totalPullRequestReviewContributions
@@ -13524,7 +13523,6 @@ async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
         // Push all member contributions from query to array
         contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib})
         console.log(userName)
-        break
       }
     } while (hasNextPageMember)
   } catch (error) {
@@ -13580,16 +13578,8 @@ async function getMemberActivity(orgid, from, to,contribArray,userIDbArray) {
 
     // Take time, orgid parameters and init array to get all member contributions
     const contribArray = []
-    const userIDbArray = [] // added by nadeem
-    const uniqueOids = []  /// temperory 
-    const reposname = [] /// temperory
     console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
-    await getMemberActivity(orgid, from, to,contribArray,userIDbArray)
-
-        
-    /////////////////// added by nadeem /////////////////////////////////
-    await getAllBranchComits("MDQ6VXNlcjg2MzQ0MjY0",from,uniqueOids,reposname)
-    /////////////////////////////////////////////////////////////////////
+    await getMemberActivity(orgid, from, to,contribArray)
 
     // Set sorting settings and add header to array
     const columns = {
