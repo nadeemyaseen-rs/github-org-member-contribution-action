@@ -12,7 +12,7 @@ inputs:
   days:
     description: 'Amount of days in the past to collect data for'
     default: '30'
-    required: false
+    required: true
   sort:
     description: 'Column used for sorting resport results'
     # activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib

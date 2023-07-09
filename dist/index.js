@@ -13561,7 +13561,7 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
     const re = new RegExp(regex, flags)
 
     if (re.test(fromdate, todate) !== true) {
-      days = core.getInput('days', {required: false}) || '30'
+      days = core.getInput('days', {required: true}) || '30'
       to = new Date()
       from = new Date()
       from.setDate(to.getDate() - days)
@@ -13610,14 +13610,14 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
     })
 
     // Prepare path/filename, repo/org context and commit name/email variables
-    //const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
-    const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`    
-    //const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
-    //const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
-    //const {owner, repo} = github.context.repo
+    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    //const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`    
+    const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
+    const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
+    const {owner, repo} = github.context.repo
 
     // Push csv to repo
-    /*const opts = {
+    const opts = {
       owner,
       repo,
       path: reportPath,
@@ -13627,12 +13627,12 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
         name: committerName,
         email: committerEmail
       }
-    }*/
+    }
 
-    fs.writeFileSync(reportPath, csv);    
+    //fs.writeFileSync(reportPath, csv);    
     console.log(`Pushing final CSV report to repository path: ${reportPath}`)
 
-    //await octokit.rest.repos.createOrUpdateFileContents(opts)
+    await octokit.rest.repos.createOrUpdateFileContents(opts)
   } catch (error) {
     core.setFailed(error.message)
   }
