@@ -125,6 +125,7 @@ async function getAllBranchComits(uid,from,uniqueOids) {
 
 // Query all org member contributions
 async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
+  console.log(`gathering result from the date: ${from}`)
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {

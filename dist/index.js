@@ -11552,6 +11552,7 @@ async function getAllBranchComits(uid,from,uniqueOids) {
 
 // Query all org member contributions
 async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
+  console.log(`gathering result from the date: ${from}`)
   let paginationMember = null
   const query = `query ($org: String! $orgid: ID $cursorID: String $from: DateTime, $to: DateTime) {
     organization(login: $org ) {
@@ -11605,7 +11606,6 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
         const userName = member.login
         const activeContrib = member.contributionsCollection.hasAnyContributions
 //////////////////////// added by nadeem  ////////////////////////////////////////////
-        if (activeContrib) {
           try {
             // Find user id for member
             const idquery = `query ($username: String!) {
@@ -11623,7 +11623,6 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
           
           const id = getUserIdResult.user.id
           await getAllBranchComits(id,from,uniqueOids)
-        }
         const commitContrib = uniqueOids.length
         uniqueOids = []
 //////////////////////////////////////////////////////////////////////////
@@ -11725,7 +11724,7 @@ async function getMemberActivity(orgid, from, to,contribArray,uniqueOids) {
     })
 
     // Prepare path/filename, repo/org context and commit name/email variables
-    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    const reportPath = `reports/${org}-${from}-to-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
     //const reportPath = `/tmp/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`    
     const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
     const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
